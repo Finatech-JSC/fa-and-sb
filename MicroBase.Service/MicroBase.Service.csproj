@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Google.Apis.Auth" Version="1.49.0" />
+    <PackageReference Include="GoogleAuthenticator" Version="3.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.23.1" />
+    <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.23.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MicroBase.FileStorage\MicroBase.FileStorage.csproj" />
+    <ProjectReference Include="..\MicroBase.Entity\MicroBase.Entity.csproj" />
+    <ProjectReference Include="..\MicroBase.Logging\MicroBase.Logging.csproj" />
+    <ProjectReference Include="..\MicroBase.RabbitMQ\MicroBase.RabbitMQ.csproj" />
+    <ProjectReference Include="..\MicroBase.RedisProvider\MicroBase.RedisProvider.csproj" />
+    <ProjectReference Include="..\MicroBase.ShareModel\MicroBase.Share.csproj" />
+  </ItemGroup>
+
+</Project>

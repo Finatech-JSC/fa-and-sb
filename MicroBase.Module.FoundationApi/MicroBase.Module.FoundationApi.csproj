@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNet.Mvc" Version="5.2.9" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MicroBase.FileStorage\MicroBase.FileStorage.csproj" />
+		<ProjectReference Include="..\MicroBase.BaseMvc\MicroBase.BaseMvc.csproj" />
+		<ProjectReference Include="..\MicroBase.Entity\MicroBase.Entity.csproj" />
+		<ProjectReference Include="..\MicroBase.Service\MicroBase.Service.csproj" />
+		<ProjectReference Include="..\MicroBase.ShareModel\MicroBase.Share.csproj" />
+	</ItemGroup>
+</Project>
