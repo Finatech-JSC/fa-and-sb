@@ -53,6 +53,8 @@ namespace MicroBase.Service.AutoMap
             CreateMap<SystemMenuModel, SystemMenu>();
             CreateMap<SystemMenu, SystemMenuResponse>();
             CreateMap<SystemMenuResponse, SystemMenu>();
+            CreateMap<MenuExcelModel, SystemMenuModel>();
+            CreateMap<SystemMenuModel, MenuExcelModel>();
         }
     }
 }

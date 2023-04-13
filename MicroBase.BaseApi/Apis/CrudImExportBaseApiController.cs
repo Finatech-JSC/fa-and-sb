@@ -1,4 +1,5 @@
-﻿using MicroBase.Entity;
+﻿using AutoMapper;
+using MicroBase.Entity;
 using MicroBase.NoDependencyService;
 using MicroBase.Service.Foundations;
 using MicroBase.Share.Constants;
@@ -20,68 +21,153 @@ namespace MicroBase.BaseApi.Apis
     /// <typeparam name="TResponse"></typeparam>
     /// <typeparam name="TFileGirdResponse"></typeparam>
     [ApiController]
-    public abstract class CrudImExportBaseApiController<TEntity, TKey, TEntityDto, TResponse, TFileGirdResponse> : CrudBaseApiController<TEntity, TKey, TEntityDto, TResponse>
+    public abstract class CrudImExportBaseApiController<TEntity, TKey, TEntityDto, TResponse, TFileGirdResponse>
+        : CrudBaseApiController<TEntity, TKey, TEntityDto, TResponse>
         where TEntity : class, IBaseEntity<TKey>
         where TEntityDto : BaseModel
         where TFileGirdResponse : BaseFileGirdModel
         where TResponse : class
     {
         private readonly IDataGridService dataGridService;
+        private readonly ICrudAppService<TEntity, TKey, TEntityDto, TResponse> crudAppService;
+        private readonly IMapper mapper;
 
         protected CrudImExportBaseApiController(IHttpContextAccessor httpContextAccessor,
             ICrudAppService<TEntity, TKey, TEntityDto, TResponse> crudAppService,
-            IDataGridService dataGridService)
+            IDataGridService dataGridService,
+            IMapper mapper)
             : base(httpContextAccessor, crudAppService)
         {
             this.dataGridService = dataGridService;
+            this.crudAppService = crudAppService;
+            this.mapper = mapper;
         }
 
-        [HttpPost("read-from-file")]
-        public virtual BaseResponse<IEnumerable<TFileGirdResponse>> ReadFromFile(IFormFile fileUpload,
+        /// <summary>
+        /// Đọc dữ liệu từ file excel và mapping vào model validate dữ liệu sau đó trả về cho client
+        /// </summary>
+        /// <param name="fileUpload"></param>
+        /// <param name="fieldMappings"></param>
+        /// <returns></returns>
+        [HttpPost("read-from-excel-file")]
+        public virtual BaseResponse<IEnumerable<TFileGirdResponse>> ReadFromExcelFile(IFormFile fileUpload,
             [FromForm] IEnumerable<ExcelFieldMapping> fieldMappings)
         {
             try
             {
-                var isFileValid = FileExtensions.ValidateExcelFile(fileUpload);
-                if (!isFileValid)
+                var dataRecordRes = ReadDataFromExcelFile(fileUpload, fieldMappings);
+                return dataRecordRes;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Đọc dữ liệu từ file excel và mapping vào model validate dữ liệu sau đó lưu vào database
+        /// </summary>
+        /// <param name="fileUpload"></param>
+        /// <param name="fieldMappings"></param>
+        /// <returns></returns>
+        [HttpPost("import-from-excel-file")]
+        public virtual async Task<BaseResponse<IEnumerable<TKey>>> ImportFromExcelFile(IFormFile fileUpload,
+            [FromForm] IEnumerable<ExcelFieldMapping> fieldMappings)
+        {
+            try
+            {
+                var dataRecordRes = ReadDataFromExcelFile(fileUpload, fieldMappings);
+                if (!dataRecordRes.Success)
                 {
-                    return new BaseResponse<IEnumerable<TFileGirdResponse>>
+                    return new BaseResponse<IEnumerable<TKey>>
                     {
-                        Success = false,
-                        Message = CommonMessage.EXCEL_FILE_INVALID,
-                        MessageCode = nameof(CommonMessage.EXCEL_FILE_INVALID)
+                        Success = dataRecordRes.Success,
+                        Code = dataRecordRes.Code,
+                        Message = dataRecordRes.Message,
+                        MessageCode = dataRecordRes.MessageCode
                     };
                 }
 
-                var dataRecords = dataGridService.GetDataFromExcelFile<TFileGirdResponse>(fileUpload, fieldMappings);
-                foreach (var item in dataRecords)
+                var entityDtos = new List<TEntityDto>();
+                foreach (var excelRecord in dataRecordRes.Data)
                 {
-                    var context = new ValidationContext(item, serviceProvider: null, items: null);
-                    var errorResults = new List<ValidationResult>();
-
-                    var isValid = Validator.TryValidateObject(item, context, errorResults, validateAllProperties: true);
-                    item.IsValidData = isValid;
-
-                    if (!isValid)
+                    if (!excelRecord.IsValidData)
                     {
-                        item.ErrorMessages = new List<string>();
-                        for (var i = 0; i < errorResults.Count(); i++)
-                        {
-                            item.ErrorMessages.Add(errorResults.ElementAt(i).ErrorMessage);
-                        }
+                        continue;
                     }
+
+                    var entityDto = mapper.Map<TEntityDto>(excelRecord);
+                    entityDtos.Add(entityDto);
                 }
 
-                return new BaseResponse<IEnumerable<TFileGirdResponse>>
+                var insertRes = await crudAppService.AddManyRecordsAsync(entityDtos);
+                if (!insertRes.Success)
+                {
+                    return new BaseResponse<IEnumerable<TKey>>
+                    {
+                        Success = insertRes.Success,
+                        Message = insertRes.Message,
+                        MessageCode = insertRes.MessageCode
+                    };
+                }
+
+                return new BaseResponse<IEnumerable<TKey>>
                 {
                     Success = true,
-                    Data = dataRecords,
+                    Message = string.Format(CommonMessage.IMPORT_FILE_SUCESSFULLY_WITH_COUNT, $"{insertRes.Data.Count()}/{dataRecordRes.Data.Count()}"),
+                    MessageCode = nameof(CommonMessage.IMPORT_FILE_SUCESSFULLY_WITH_COUNT)
                 };
             }
             catch (Exception)
             {
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Đọc dữ liệu từ file excel và mapping vào model validate dữ liệu
+        /// </summary>
+        /// <param name="fileUpload"></param>
+        /// <param name="fieldMappings"></param>
+        /// <returns></returns>
+        private BaseResponse<IEnumerable<TFileGirdResponse>> ReadDataFromExcelFile(IFormFile fileUpload,
+            IEnumerable<ExcelFieldMapping> fieldMappings)
+        {
+            var isFileValid = FileExtensions.ValidateExcelFile(fileUpload);
+            if (!isFileValid)
+            {
+                return new BaseResponse<IEnumerable<TFileGirdResponse>>
+                {
+                    Success = false,
+                    Message = CommonMessage.EXCEL_FILE_INVALID,
+                    MessageCode = nameof(CommonMessage.EXCEL_FILE_INVALID)
+                };
+            }
+
+            var dataRecords = dataGridService.GetDataFromExcelFile<TFileGirdResponse>(fileUpload, fieldMappings);
+            foreach (var item in dataRecords)
+            {
+                var context = new ValidationContext(item, serviceProvider: null, items: null);
+                var errorResults = new List<ValidationResult>();
+
+                var isValid = Validator.TryValidateObject(item, context, errorResults, validateAllProperties: true);
+                item.IsValidData = isValid;
+
+                if (!isValid)
+                {
+                    item.ErrorMessages = new List<string>();
+                    for (var i = 0; i < errorResults.Count(); i++)
+                    {
+                        item.ErrorMessages.Add(errorResults.ElementAt(i).ErrorMessage);
+                    }
+                }
+            }
+
+            return new BaseResponse<IEnumerable<TFileGirdResponse>>
+            {
+                Success = true,
+                Data = dataRecords,
+            };
         }
     }
 }

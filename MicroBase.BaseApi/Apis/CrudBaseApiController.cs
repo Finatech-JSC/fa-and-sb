@@ -17,7 +17,8 @@ namespace MicroBase.BaseApi.Apis
     /// <typeparam name="TResponse"></typeparam>
     /// <typeparam name="TDbContext"></typeparam>
     [ApiController]
-    public abstract class CrudBaseApiController<TEntity, TKey, TEntityDto, TResponse> : BaseTrackingCrudApiController<TEntity, TKey, TEntityDto>
+    public abstract class CrudBaseApiController<TEntity, TKey, TEntityDto, TResponse> 
+        : BaseTrackingCrudApiController<TEntity, TKey, TEntityDto>
         where TEntity : class, IBaseEntity<TKey>
         where TEntityDto : BaseModel
         where TResponse : class

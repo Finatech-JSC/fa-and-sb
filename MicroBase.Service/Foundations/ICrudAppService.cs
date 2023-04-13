@@ -16,7 +16,12 @@ namespace MicroBase.Service.Foundations
         Task<TPaging<TResponse>> FindAsync(List<SearchTermModel> searchTerms, int pageIndex = 1, int pageSize = 20);
 
         Task<BaseResponse<TKey>> AddNewRecordAsync(TEntityDto entityDto);
-
+        
+        /// <summary>
+        /// Thêm mới danh sách bản ghi từ TEntityDtos
+        /// </summary>
+        /// <param name="IEnumerable<TEntityDto>"></param>
+        /// <returns>Trả ra danh sách Id của các bản ghi đã được thêm mới</returns>
         Task<BaseResponse<IEnumerable<TKey>>> AddManyRecordsAsync(IEnumerable<TEntityDto> entityDtos);
 
         Task<BaseResponse<TKey>> UpdateRecordAsync(TEntityDto entityDto);

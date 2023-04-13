@@ -52,6 +52,8 @@
         public const string SUBSCRIBE_SUCCESS = "Subscribe successfully";
 
         public const string REQUIRED_ROLE_SELECTED = "Please select one or more roles";
+        public const string IMPORT_FILE_SUCESSFULLY = "Tải lên dữ liệu thành công";
+        public const string IMPORT_FILE_SUCESSFULLY_WITH_COUNT = "Tải lên dữ liệu thành công {0} bản ghi";
 
         public static class Account
         {

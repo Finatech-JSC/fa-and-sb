@@ -1,4 +1,5 @@
-﻿using MicroBase.BaseApi.Apis;
+﻿using AutoMapper;
+using MicroBase.BaseApi.Apis;
 using MicroBase.Entity.Accounts;
 using MicroBase.NoDependencyService;
 using MicroBase.Service.Foundations;
@@ -14,7 +15,9 @@ namespace MicroBase.ApiApplication.ApiControllers
     {
         public MenuApiController(IHttpContextAccessor httpContextAccessor,
             ICrudAppService<SystemMenu, Guid, SystemMenuModel, SystemMenuResponse> crudAppService,
-            IDataGridService dataGridService) : base(httpContextAccessor, crudAppService, dataGridService)
+            IDataGridService dataGridService,
+            IMapper mapper)
+            : base(httpContextAccessor, crudAppService, dataGridService, mapper)
         {
         }
     }
