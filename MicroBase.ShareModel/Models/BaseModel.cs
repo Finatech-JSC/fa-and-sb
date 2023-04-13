@@ -11,13 +11,13 @@ namespace MicroBase.Share.Models
 
         [JsonIgnore]
         public virtual DateTime? CreatedDate { get; set; }
-        
+
         [JsonIgnore]
         public virtual Guid? CreatedBy { get; set; }
-        
+
         [JsonIgnore]
         public virtual DateTime? ModifiedDate { get; set; }
-        
+
         [JsonIgnore]
         public virtual Guid? ModifiedBy { get; set; }
     }

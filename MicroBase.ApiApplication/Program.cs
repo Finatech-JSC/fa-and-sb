@@ -13,7 +13,10 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Models;
 using MicroBase.BaseApi.ServiceModule;
 using MicroBase.BaseMvc.Filters;
-using Microsoft.EntityFrameworkCore;
+using MicroBase.BaseMvc;
+using MicroBase.Share.Models;
+using Microsoft.AspNetCore.Mvc;
+using MicroBase.Share.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,8 +90,21 @@ builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 #endregion
 
-var app = builder.Build();
+builder.Services.AddMvc().ConfigureApiBehaviorOptions(options =>
+{
+    options.InvalidModelStateResponseFactory = actionContext =>
+    {
+        var modelState = actionContext.ModelState.Values;
+        return new BadRequestObjectResult(new BaseResponse<object>
+        {
+            Success = false,
+            Message = CommonMessage.MODEL_STATE_INVALID,
+            Errors = ModelStateService.GetModelStateErros(actionContext.ModelState)
+        });
+    };
+}).AddJsonOptions(options => { });
 
+var app = builder.Build();
 app.UseCors();
 
 // Configure the HTTP request pipeline.

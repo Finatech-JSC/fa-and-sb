@@ -773,7 +773,7 @@ namespace MicroBase.Service.Accounts
                 var avatarPath = new BaseResponse<FileUploadResponse>();
                 if (model.Avatar != null)
                 {
-                    var validate = FileExtensions.ValidateImage(model.Avatar);
+                    var validate = FileExtensions.ValidateImageFile(model.Avatar);
                     if (validate == false)
                     {
                         return new BaseResponse<Guid>
@@ -917,7 +917,7 @@ namespace MicroBase.Service.Accounts
                 var avatarPath = new BaseResponse<FileUploadResponse>();
                 if (model.Avatar != null)
                 {
-                    var validate = FileExtensions.ValidateImage(model.Avatar);
+                    var validate = FileExtensions.ValidateImageFile(model.Avatar);
                     if (validate == false)
                     {
                         return new BaseResponse<Guid>

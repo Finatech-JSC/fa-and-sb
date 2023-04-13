@@ -403,7 +403,7 @@ namespace MicroBase.Service.Accounts
                 var avatarPath = string.Empty;
                 if (model.IdentityUserMetaData.AvatarFromForm != null)
                 {
-                    var validate = FileExtensions.ValidateImage(model.IdentityUserMetaData.AvatarFromForm);
+                    var validate = FileExtensions.ValidateImageFile(model.IdentityUserMetaData.AvatarFromForm);
                     if (validate == false)
                     {
                         return new BaseCmsResponse<object>

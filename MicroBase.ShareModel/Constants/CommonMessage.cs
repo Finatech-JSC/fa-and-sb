@@ -36,6 +36,7 @@
         public const string MAX_FILE_LENGTH = "Only accept files with size less than or equal to {0}Mb";
         public const string INVALID_FILE_NAME = "File name cannot contain special characters";
         public const string FILE_INVALID = "The upload file invalid";
+        public const string EXCEL_FILE_INVALID = "File tải lên không hợp lệ. Chỉ chấp nhận file có định dạng *.xlsx, *.xls";
         public const string CANT_UPLOAD_GIF_FILE = "Sorry! gif format is not supported";
         public const string TOO_MANY_REQUESTS = "Too many requests";
         public const string UPLOAD_LIMIT_FAILED = "Too many requests, please try again in {0} minutes";
@@ -51,7 +52,6 @@
         public const string SUBSCRIBE_SUCCESS = "Subscribe successfully";
 
         public const string REQUIRED_ROLE_SELECTED = "Please select one or more roles";
-
 
         public static class Account
         {

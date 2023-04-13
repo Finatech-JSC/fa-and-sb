@@ -34,7 +34,7 @@ namespace MicroBase.FileStorage
             bool isMakePublic,
             bool isGeneratePathByDate)
         {
-            var validate = FileExtensions.ValidateImage(formFile);
+            var validate = FileExtensions.ValidateImageFile(formFile);
             if (!validate)
             {
                 var acceptedFileExtensions = configuration.GetSection("FileManage:AcceptedFileExtensions").Get<List<string>>();

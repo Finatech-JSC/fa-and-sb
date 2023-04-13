@@ -5,6 +5,7 @@ using MicroBase.Entity.Localtions;
 using MicroBase.Entity.Notifications;
 using MicroBase.Share.Models.CMS.Accounts;
 using MicroBase.Share.Models.CMS.Locations;
+using MicroBase.Share.Models.CMS.Menus;
 using MicroBase.Share.Models.CMS.Permissions;
 using MicroBase.Share.Models.Localizations.Localizations;
 using MicroBase.Share.Models.Notifications;

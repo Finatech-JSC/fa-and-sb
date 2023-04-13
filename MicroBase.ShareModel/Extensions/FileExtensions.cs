@@ -110,7 +110,7 @@ namespace MicroBase.Share.Extensions
                 };
             }
 
-            var fileTypeCheck = ValidateImage(image);
+            var fileTypeCheck = ValidateImageFile(image);
             if (!fileTypeCheck)
             {
                 return new BaseResponse<string>
@@ -129,7 +129,8 @@ namespace MicroBase.Share.Extensions
 
         private static List<Record> DOCS_TYPES = new List<Record>
         {
-            new Record("doc xls ppt msg", "D0 CF 11 E0 A1 B1 1A E1")
+            new Record("doc xls ppt msg", "D0 CF 11 E0 A1 B1 1A E1"),
+            new Record("xlsx", "50 4B 03 04")
         };
 
         private static List<Record> PDF_TYPES = new List<Record>
@@ -149,10 +150,26 @@ namespace MicroBase.Share.Extensions
             new Record("jpg,jpeg","FF D8 FF E1 ?? ?? 45 78 69 66 00 00")
         };
 
-        public static bool ValidateImage(IFormFile file)
+        public static bool ValidateImageFile(IFormFile file)
         {
             var sniffer = new Sniffer();
             sniffer.Populate(IMAGE_TYPES);
+
+            byte[] fileHead = ReadFileHead(file);
+            var results = sniffer.Match(fileHead);
+
+            if (results.Count > 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        
+        public static bool ValidateExcelFile(IFormFile file)
+        {
+            var sniffer = new Sniffer();
+            sniffer.Populate(DOCS_TYPES);
 
             byte[] fileHead = ReadFileHead(file);
             var results = sniffer.Match(fileHead);

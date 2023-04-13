@@ -6,14 +6,15 @@ using System.Reflection;
 using System.Text;
 using MicroBase.Share.Extensions;
 using MicroBase.Share.Constants;
+using MicroBase.Share.Models.DataGirds;
 
 namespace MicroBase.NoDependencyService
 {
     public interface IDataGridService
     {
-        IEnumerable<T> GetDataFromFile<T>(IFormFile formFile, Dictionary<string, string> fields);
+        IEnumerable<T> GetDataFromExcelFile<T>(IFormFile formFile, IEnumerable<ExcelFieldMapping> fieldMappings);
 
-        IEnumerable<T> GetRawDataFromFile<T>(IFormFile formFile, Dictionary<string, string> fields);
+        IEnumerable<T> GetRawDataFromExcelFile<T>(IFormFile formFile, Dictionary<string, string> fields);
 
         byte[] ExportToCsv<T>(IEnumerable<T> source);
 
@@ -22,10 +23,11 @@ namespace MicroBase.NoDependencyService
 
     public class DataGridService : IDataGridService
     {
-        public IEnumerable<T> GetDataFromFile<T>(IFormFile formFile, Dictionary<string, string> fields)
+        public IEnumerable<T> GetDataFromExcelFile<T>(IFormFile formFile, IEnumerable<ExcelFieldMapping> fieldMappings)
         {
             try
             {
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
                 var results = new List<T>();
                 using (var ms = new MemoryStream())
                 {
@@ -35,7 +37,7 @@ namespace MicroBase.NoDependencyService
                     using (ExcelPackage package = new ExcelPackage(ms))
                     {
                         var workbook = package.Workbook;
-                        var worksheet = workbook.Worksheets[1];
+                        var worksheet = workbook.Worksheets[0];
                         var colsTitle = new List<string>();
                         for (int col = 1; col <= worksheet.Dimension.Columns; col++)
                         {
@@ -45,64 +47,69 @@ namespace MicroBase.NoDependencyService
 
                         for (int row = 2; row <= worksheet.Dimension.Rows; row++)
                         {
-                            var product = (T)Activator.CreateInstance(typeof(T));
+                            var entityModel = (T)Activator.CreateInstance(typeof(T));
                             for (int i = 1; i <= colsTitle.Count; i++)
                             {
-                                var value = worksheet.Cells[row, i].Value == null ? string.Empty : worksheet.Cells[row, i].Value.ToString();
-                                if (fields.ContainsKey(colsTitle[i - 1]))
-                                {
-                                    var fieldName = fields[colsTitle[i - 1]];
-                                    var field = product.GetType().GetProperty(fieldName);
-                                    if (field == null)
-                                    {
-                                        continue;
-                                    }
+                                var value = worksheet.Cells[row, i].Value == null
+                                    ? string.Empty
+                                    : worksheet.Cells[row, i].Value.ToString();
 
-                                    if (field.PropertyType == typeof(DateTime) || field.PropertyType == typeof(DateTime?))
+                                var fieldMapping = fieldMappings.FirstOrDefault(s => s.ExcelColumn == colsTitle[i - 1]);
+                                if (fieldMapping == null)
+                                {
+                                    continue;
+                                }
+
+                                var field = entityModel.GetType().GetProperty(fieldMapping.EntityColumn);
+                                if (field == null)
+                                {
+                                    continue;
+                                }
+
+                                if (field.PropertyType == typeof(DateTime) || field.PropertyType == typeof(DateTime?))
+                                {
+                                    DateTime date = Convert.ToDateTime(value);
+                                    field.SetValue(entityModel, date);
+                                }
+                                else if (field.PropertyType == typeof(int) || field.PropertyType == typeof(int?))
+                                {
+                                    var isSuccess = int.TryParse(value, out var val);
+                                    if (isSuccess)
                                     {
-                                        DateTime date = Convert.ToDateTime(value);
-                                        field.SetValue(product, date);
+                                        field.SetValue(entityModel, val);
                                     }
-                                    else if (field.PropertyType == typeof(int) || field.PropertyType == typeof(int?))
+                                }
+                                else if (field.PropertyType == typeof(float) || field.PropertyType == typeof(float?))
+                                {
+                                    var isSuccess = float.TryParse(value, out var val);
+                                    if (isSuccess)
                                     {
-                                        var isSuccess = int.TryParse(value, out var val);
-                                        if (isSuccess)
-                                        {
-                                            field.SetValue(product, val);
-                                        }
+                                        field.SetValue(entityModel, val);
                                     }
-                                    else if (field.PropertyType == typeof(float) || field.PropertyType == typeof(float?))
+                                }
+                                else if (field.PropertyType == typeof(decimal) || field.PropertyType == typeof(decimal?))
+                                {
+                                    var isSuccess = decimal.TryParse(value, out var val);
+                                    if (isSuccess)
                                     {
-                                        var isSuccess = float.TryParse(value, out var val);
-                                        if (isSuccess)
-                                        {
-                                            field.SetValue(product, val);
-                                        }
+                                        field.SetValue(entityModel, val);
                                     }
-                                    else if (field.PropertyType == typeof(decimal) || field.PropertyType == typeof(decimal?))
+                                }
+                                else if (field.PropertyType == typeof(bool) || field.PropertyType == typeof(bool?))
+                                {
+                                    var isSuccess = bool.TryParse(value, out var val);
+                                    if (isSuccess)
                                     {
-                                        var isSuccess = decimal.TryParse(value, out var val);
-                                        if (isSuccess)
-                                        {
-                                            field.SetValue(product, val);
-                                        }
+                                        field.SetValue(entityModel, val);
                                     }
-                                    else if (field.PropertyType == typeof(bool) || field.PropertyType == typeof(bool?))
-                                    {
-                                        var isSuccess = bool.TryParse(value, out var val);
-                                        if (isSuccess)
-                                        {
-                                            field.SetValue(product, val);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        product.GetType().GetProperty(fieldName).SetValue(product, value);
-                                    }
+                                }
+                                else
+                                {
+                                    entityModel.GetType().GetProperty(fieldMapping.EntityColumn).SetValue(entityModel, value);
                                 }
                             }
 
-                            results.Add(product);
+                            results.Add(entityModel);
                         }
 
                         package.Dispose();
@@ -120,7 +127,7 @@ namespace MicroBase.NoDependencyService
             }
         }
 
-        public IEnumerable<T> GetRawDataFromFile<T>(IFormFile formFile, Dictionary<string, string> fields)
+        public IEnumerable<T> GetRawDataFromExcelFile<T>(IFormFile formFile, Dictionary<string, string> fields)
         {
             try
             {
@@ -155,6 +162,7 @@ namespace MicroBase.NoDependencyService
                                     {
                                         continue;
                                     }
+
                                     product.GetType().GetProperty(fieldName).SetValue(product, value);
                                 }
                             }
