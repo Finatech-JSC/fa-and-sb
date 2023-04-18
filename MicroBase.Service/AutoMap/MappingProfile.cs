@@ -20,7 +20,7 @@ namespace MicroBase.Service.AutoMap
             CreateMap<IdentityUser, IdentityUserResponse>();
             CreateMap<IdentityUserMetaData, IdentityUserMetaDataResponse>();
             CreateMap<IdentityUser, SystemAccountResponse>();
-            CreateMap<IdentityUserRoleGroup, RoleGroupRoboModel>();
+            CreateMap<PrivilegesUserRoleMap, RoleGroupRoboModel>();
 
             CreateMap<IdentityUserCmsModel, IdentityUser>();
             CreateMap<IdentityUser, IdentityUserCmsModel>();

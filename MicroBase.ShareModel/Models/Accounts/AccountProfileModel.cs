@@ -34,12 +34,6 @@ namespace MicroBase.Share.Models.Accounts
 
         public bool IsConfirmed { get; set; }
 
-        public string DefaultLanguage { get; set; }
-
-        public bool AllowAppNotification { get; set; }
-
-        public bool AllowEmailNotification { get; set; }
-
         public IEnumerable<TwoFaResponse> TwoFactorServices { get; set; }
 
         public bool EmailConfirmed { get; set; }

@@ -22,52 +22,6 @@ namespace MicroBase.Entity.Migrations
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("MicroBase.Entity.Accounts.ExternalAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TIMESTAMP(7)");
-
-                    b.Property<string>("ExternalAccountId")
-                        .HasMaxLength(255)
-                        .HasColumnType("NVARCHAR2(255)");
-
-                    b.Property<Guid>("IdentityUserId")
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("NUMBER(1)");
-
-                    b.Property<Guid?>("ModifiedBy")
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<DateTime?>("ModifiedDate")
-                        .HasColumnType("TIMESTAMP(7)");
-
-                    b.Property<string>("Platform")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("NVARCHAR2(50)");
-
-                    b.Property<string>("ProviderName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdentityUserId")
-                        .IsUnique();
-
-                    b.ToTable("IdentityUser_ExternalAccounts");
-                });
-
             modelBuilder.Entity("MicroBase.Entity.Accounts.IdentityUser", b =>
                 {
                     b.Property<Guid>("Id")
@@ -79,7 +33,8 @@ namespace MicroBase.Entity.Migrations
 
                     b.Property<string>("AccountType")
                         .IsRequired()
-                        .HasColumnType("NVARCHAR2(2000)");
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -160,13 +115,6 @@ namespace MicroBase.Entity.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("NUMBER(1)");
 
-                    b.Property<Guid?>("ReferralAccountId")
-                        .HasColumnType("RAW(16)");
-
-                    b.Property<string>("ReferralId")
-                        .HasMaxLength(50)
-                        .HasColumnType("NVARCHAR2(50)");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("NVARCHAR2(2000)");
 
@@ -178,12 +126,9 @@ namespace MicroBase.Entity.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("NVARCHAR2(256)");
 
-                    b.Property<string>("UserNameKana")
-                        .HasMaxLength(255)
-                        .HasColumnType("NVARCHAR2(255)");
-
                     b.Property<string>("Via")
-                        .HasColumnType("NVARCHAR2(2000)");
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)");
 
                     b.HasKey("Id");
 
@@ -193,8 +138,6 @@ namespace MicroBase.Entity.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
-
-                    b.HasIndex("ReferralAccountId");
 
                     b.ToTable("IdentityUsers", (string)null);
                 });
@@ -988,26 +931,6 @@ namespace MicroBase.Entity.Migrations
                     b.ToTable("IdentityUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("MicroBase.Entity.Accounts.ExternalAccount", b =>
-                {
-                    b.HasOne("MicroBase.Entity.Accounts.IdentityUser", "IdentityUser")
-                        .WithOne("ExternalAccount")
-                        .HasForeignKey("MicroBase.Entity.Accounts.ExternalAccount", "IdentityUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("IdentityUser");
-                });
-
-            modelBuilder.Entity("MicroBase.Entity.Accounts.IdentityUser", b =>
-                {
-                    b.HasOne("MicroBase.Entity.Accounts.IdentityUser", "ReferralAccount")
-                        .WithMany()
-                        .HasForeignKey("ReferralAccountId");
-
-                    b.Navigation("ReferralAccount");
-                });
-
             modelBuilder.Entity("MicroBase.Entity.Accounts.IdentityUserACGroup", b =>
                 {
                     b.HasOne("MicroBase.Entity.Accounts.IdentityUser", "IdentityUser")
@@ -1167,8 +1090,6 @@ namespace MicroBase.Entity.Migrations
 
             modelBuilder.Entity("MicroBase.Entity.Accounts.IdentityUser", b =>
                 {
-                    b.Navigation("ExternalAccount");
-
                     b.Navigation("IdentityUserACGroups");
 
                     b.Navigation("IdentityUserMetaData");

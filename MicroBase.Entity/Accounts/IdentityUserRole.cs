@@ -4,19 +4,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MicroBase.Entity.Accounts
 {
-    [Table("IdentityUser_AC_Roles")]
-    public class IdentityUserRole : IdentityRole<Guid>, IBaseEntity<Guid>
+    [Table("Privileges_Roles")]
+    public class PrivilegesRole : IdentityRole<Guid>, IBaseEntity<Guid>
     {
-        [Required, MaxLength(100)]
+        [Required, MaxLength(128)]
         public override string Name { get; set; }
 
-        [Required, MaxLength(100)]
+        [Required, MaxLength(50)]
         public string Code { get; set; }
 
-        [MaxLength(100)]
+        [MaxLength(128)]
         public string GroupName { get; set; }
 
-        [MaxLength(100)]
+        [MaxLength(50)]
         public string GroupCode { get; set; }
 
         [MaxLength(50)]
@@ -46,8 +46,8 @@ namespace MicroBase.Entity.Accounts
             return Id;
         }
         
-        public virtual ICollection<IdentityUserACGroup> IdentityUserACGroups { get; set; }
+        public virtual ICollection<PrivilegesUserRoleMap> PrivilegesUserGroupMaps { get; set; }
 
-        public virtual ICollection<IdentityUserRoleGroupMap> IdentityUserRoleGroupMaps { get; set; }
+        public virtual ICollection<PrivilegesRoleGroupMap> PrivilegesRoleGroupMaps { get; set; }
     }
 }

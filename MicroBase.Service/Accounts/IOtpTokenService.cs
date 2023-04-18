@@ -402,10 +402,6 @@ namespace MicroBase.Service.Accounts
 
                 var cultureCode = Constants.CultureCode.UnitedStates;
                 var userMetaData = await identityUserMetaDataRepo.FindOneAsync(s => s.IdentityUserId == accountId);
-                if (userMetaData != null && !string.IsNullOrWhiteSpace(userMetaData.DefaultLanguage))
-                {
-                    cultureCode = userMetaData.DefaultLanguage.ToUpper();
-                }
 
                 var token = new Dictionary<string, string>
                 {

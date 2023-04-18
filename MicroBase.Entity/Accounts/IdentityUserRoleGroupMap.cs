@@ -3,19 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MicroBase.Entity.Accounts
 {
-    [Table("IdentityUser_AC_RoleGroup_Maps")]
-    public class IdentityUserRoleGroupMap : BaseEntity<Guid>
+    [Table("Privileges_RoleGroupMaps")]
+    public class PrivilegesRoleGroupMap : BaseEntity<Guid>
     {
         [Required]
-        public Guid RoleGroupId { get; set; }
+        public Guid GroupId { get; set; }
 
         [Required]
         public Guid RoleId { get; set; }
 
         [ForeignKey("RoleId")]
-        public virtual IdentityUserRole IdentityUserRole { get; set; }
+        public virtual PrivilegesRole PrivilegesRole { get; set; }
 
-        [ForeignKey("RoleGroupId")]
-        public virtual IdentityUserRoleGroup IdentityUserRoleGroup { get; set; }
+        [ForeignKey("GroupId")]
+        public virtual PrivilegesGroup PrivilegesGroup { get; set; }
     }
 }

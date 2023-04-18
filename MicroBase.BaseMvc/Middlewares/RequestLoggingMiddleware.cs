@@ -18,10 +18,6 @@ namespace MicroBase.BaseMvc.Middlewares
         {
             try
             {
-                await _next(context);
-            }
-            finally
-            {
                 StringBuilder sbLog = new StringBuilder();
                 sbLog.AppendLine($"Request {context.Request?.Method} {context.Request?.Path.Value}{context.Request?.QueryString} => statusCode: {context.Response?.StatusCode}");
 
@@ -57,6 +53,8 @@ namespace MicroBase.BaseMvc.Middlewares
                 {
                     var originalResponseBody = context.Response.Body;
                     context.Response.Body = swapStream;
+
+                    await _next(context);
                     swapStream.Seek(0, SeekOrigin.Begin);
                     responseBody = new StreamReader(swapStream).ReadToEnd();
                     swapStream.Seek(0, SeekOrigin.Begin);
@@ -68,6 +66,10 @@ namespace MicroBase.BaseMvc.Middlewares
                 sbLog.AppendLine("=============");
 
                 requestLog.Trace(sbLog.ToString());
+            }
+            finally
+            {
+
             }
         }
     }

@@ -14,8 +14,6 @@ namespace MicroBase.Share.Models.Accounts
         [MaxLength(255, ErrorMessage = CommonMessage.MAX_LENGTH)]
         public string Address { get; set; }
 
-        public string CountryCode { get; set; }
-
         public Guid? ProvinceId { get; set; }
 
         public Guid? DistrictId { get; set; }
@@ -27,8 +25,6 @@ namespace MicroBase.Share.Models.Accounts
         public string PhoneNumber { get; set; }
 
         public IFormFile Avatar { get; set; }
-
-        public string ReferralId { get; set; }
     }
 
     public class UpdateAccountBackground

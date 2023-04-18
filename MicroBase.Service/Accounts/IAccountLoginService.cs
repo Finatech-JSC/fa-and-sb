@@ -67,8 +67,6 @@ namespace MicroBase.Service.Accounts
 
         Task<BaseResponse<object>> UpdateAccountAsync(Guid accountId, RegisterModel model);
 
-        Task<BaseResponse<object>> AccountNotificationSettingAsync(Guid accountId, AccountNotificationSettingModel model);
-
         Task<IdentityUser> GetAccountAysnc(Expression<Func<IdentityUser, bool>> predicate);
     }
 
@@ -327,17 +325,6 @@ namespace MicroBase.Service.Accounts
                 };
             }
 
-            var refereeRes = await ValidateReferralCodeAsync(model.FromReferralId);
-            if (!refereeRes.Success)
-            {
-                return new BaseResponse<AccountRegisterResponse>
-                {
-                    Success = false,
-                    Message = refereeRes.Message,
-                    MessageCode = nameof(refereeRes.MessageCode)
-                };
-            }
-
             var account = await microDbContext.Set<IdentityUser>().FirstOrDefaultAsync(s => s.Email == model.UserName);
             if (account != null && account.IsDelete == true)
             {
@@ -367,15 +354,9 @@ namespace MicroBase.Service.Accounts
                 PhoneNumberConfirmed = false,
                 CreatedDate = DateTime.UtcNow,
                 ModifiedDate = DateTime.UtcNow,
-                ReferralId = await GenerateReferralCodeAsync(),
                 FullName = model.FullName,
                 AccountType = type.ToString()
             };
-
-            if (refereeRes != null && refereeRes.Data != null && refereeRes.Data.Id != Guid.Empty)
-            {
-                accountEntity.ReferralAccountId = refereeRes.Data.Id;
-            }
 
             var result = await userManager.CreateAsync(accountEntity, model.Password);
             if (!result.Succeeded)
@@ -416,44 +397,6 @@ namespace MicroBase.Service.Accounts
             };
         }
 
-        private async Task<BaseResponse<IdentityUser>> ValidateReferralCodeAsync(string fromReferralId)
-        {
-            if (string.IsNullOrWhiteSpace(fromReferralId))
-            {
-                return new BaseResponse<IdentityUser>
-                {
-                    Success = true
-                };
-            }
-
-            var refereeEntity = await GetByReferralIdAsync(fromReferralId);
-            if (refereeEntity == null)
-            {
-                return new BaseResponse<IdentityUser>
-                {
-                    Success = false,
-                    Message = CommonMessage.Account.REFERRAL_ID_DOES_NOT_EXISTS,
-                    MessageCode = nameof(CommonMessage.Account.REFERRAL_ID_DOES_NOT_EXISTS)
-                };
-            }
-            else if (refereeEntity.IsSystemLocked.HasValue && refereeEntity.IsSystemLocked.Value
-                && refereeEntity.LockoutEnd.HasValue && refereeEntity.LockoutEnd.Value.ToUniversalTime() > DateTime.UtcNow)
-            {
-                return new BaseResponse<IdentityUser>
-                {
-                    Success = false,
-                    Message = CommonMessage.Account.REFERRAL_ID_ACCOUNT_LOCKED,
-                    MessageCode = nameof(CommonMessage.Account.REFERRAL_ID_ACCOUNT_LOCKED)
-                };
-            }
-
-            return new BaseResponse<IdentityUser>
-            {
-                Success = true,
-                Data = refereeEntity
-            };
-        }
-
         public async Task<BaseResponse<LoginResponse>> Web3LoginAsync(Web3RegisterModel model,
             BaseActivityTrackingModel trackingModel)
         {
@@ -472,17 +415,6 @@ namespace MicroBase.Service.Accounts
                 return await LoginSuccessAsync(trackingMessage, userEntity);
             }
 
-            var refereeRes = await ValidateReferralCodeAsync(model.FromReferralId);
-            if (!refereeRes.Success)
-            {
-                return new BaseResponse<LoginResponse>
-                {
-                    Success = false,
-                    Message = refereeRes.Message,
-                    MessageCode = refereeRes.MessageCode
-                };
-            }
-
             var newIdentityUserId = Guid.NewGuid();
             var referralId = await GenerateReferralCodeAsync();
             var accountEntity = new IdentityUser
@@ -494,15 +426,9 @@ namespace MicroBase.Service.Accounts
                 NormalizedEmail = referralId.GenerateSystemEmail().ToUpper(),
                 Via = trackingModel.Via,
                 CreatedDate = DateTime.UtcNow,
-                ReferralId = referralId,
                 AccountType = Constants.Account.Type.Normal.ToString(),
                 IsDefaultPassword = true
             };
-
-            if (refereeRes != null && refereeRes.Data != null && refereeRes.Data.Id != Guid.Empty)
-            {
-                accountEntity.ReferralAccountId = refereeRes.Data.Id;
-            }
 
             var result = await userManager.CreateAsync(accountEntity, Guid.NewGuid().ToString());
             if (!result.Succeeded)
@@ -679,7 +605,6 @@ namespace MicroBase.Service.Accounts
                 PhoneNumber = userNameIsPhone ? externalUserName.ToLowerInvariant() : null,
                 PhoneNumberConfirmed = userNameIsPhone ? true : false,
                 CreatedDate = DateTime.UtcNow,
-                ReferralId = await GenerateReferralCodeAsync(),
                 IsDefaultPassword = true,
                 AccountType = Constants.Account.Type.Normal.ToString(),
                 LastLoginTime = DateTime.UtcNow
@@ -790,11 +715,6 @@ namespace MicroBase.Service.Accounts
                 var userMetaData = user.IdentityUserMetaData;
                 if (userMetaData != null)
                 {
-                    if (!string.IsNullOrEmpty(model.CountryCode))
-                    {
-                        userMetaData.CountryCode = model.CountryCode;
-                    }
-
                     if (!string.IsNullOrEmpty(model.Address))
                     {
                         userMetaData.Address = model.Address;
@@ -828,7 +748,6 @@ namespace MicroBase.Service.Accounts
                     userMetaData = new IdentityUserMetaData
                     {
                         Id = Guid.NewGuid(),
-                        CountryCode = model.CountryCode,
                         Address = model.Address,
                         DistrictId = model.DistrictId,
                         ProvinceId = model.ProvinceId,
@@ -934,11 +853,6 @@ namespace MicroBase.Service.Accounts
                 var userMetaData = user.IdentityUserMetaData;
                 if (userMetaData != null)
                 {
-                    if (!string.IsNullOrEmpty(model.CountryCode))
-                    {
-                        userMetaData.CountryCode = model.CountryCode;
-                    }
-
                     if (!string.IsNullOrEmpty(model.Address))
                     {
                         userMetaData.Address = model.Address;
@@ -972,7 +886,6 @@ namespace MicroBase.Service.Accounts
                     userMetaData = new IdentityUserMetaData
                     {
                         Id = Guid.NewGuid(),
-                        CountryCode = model.CountryCode,
                         Address = model.Address,
                         DistrictId = model.DistrictId,
                         ProvinceId = model.ProvinceId,
@@ -1272,37 +1185,6 @@ namespace MicroBase.Service.Accounts
             };
         }
 
-        public async Task<BaseResponse<object>> AccountNotificationSettingAsync(Guid accountId, AccountNotificationSettingModel model)
-        {
-            try
-            {
-                var userMetaData = await identityUserMetaDataRepo.FindOneAsync(s => s.IdentityUserId == accountId);
-                if (userMetaData == null)
-                {
-                    return new BaseResponse<object>
-                    {
-                        Success = false,
-                        Message = CommonMessage.Account.NOT_FOUND
-                    };
-                }
-
-                userMetaData.DefaultLanguage = model.Language;
-                userMetaData.AllowAppNotification = model.AllowAppNotification;
-                userMetaData.AllowEmailNotification = model.AllowEmailNotification;
-                await identityUserMetaDataRepo.UpdateAsync(userMetaData);
-
-                return new BaseResponse<object>
-                {
-                    Success = true,
-                    Message = CommonMessage.Account.UPDATE_NOTIFICATION_SETTING_SUCCESSFUL
-                };
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
         public async Task<IdentityUser> GetAccountAysnc(Expression<Func<IdentityUser, bool>> predicate)
         {
             return await microDbContext.Set<IdentityUser>()
@@ -1377,11 +1259,8 @@ namespace MicroBase.Service.Accounts
             return new LoginResponse
             {
                 AccountType = identity.AccountType,
-                AllowAppNotification = identity.IdentityUserMetaData != null ? identity.IdentityUserMetaData.AllowAppNotification : false,
-                AllowEmailNotification = identity.IdentityUserMetaData != null ? identity.IdentityUserMetaData.AllowEmailNotification : false,
                 Avatar = identity.IdentityUserMetaData?.Avatar,
                 Email = identity.Email,
-                DefaultLanguage = identity.IdentityUserMetaData?.DefaultLanguage,
                 DateOfBirth = identity.IdentityUserMetaData?.DateOfBirth,
                 EmailConfirmDate = identity.EmailConfirmDate,
                 EmailConfirmed = identity.EmailConfirmed,
@@ -1402,7 +1281,6 @@ namespace MicroBase.Service.Accounts
         {
             var user = await microDbContext.Set<IdentityUser>()
                 .Include(s => s.IdentityUserMetaData)
-                .Include(s => s.ExternalAccount)
                 .Include(s => s.IdentityUserTwoFAs)
                 .FirstOrDefaultAsync(s => s.NormalizedEmail == email.ToUpper());
 
@@ -1429,28 +1307,10 @@ namespace MicroBase.Service.Accounts
             };
         }
 
-        private async Task<IdentityUser> GetByReferralIdAsync(string referralId)
-        {
-            if (string.IsNullOrWhiteSpace(referralId))
-            {
-                return null;
-            }
-
-            var user = await redisStogare
-                .HGetAsync<IdentityUser>(MemoryCacheConstants.CacheKeys.IDENTITY_USER_REFERRAL_ID, referralId.ToUpper());
-            if (user == null)
-            {
-                user = await Repository.FindOneAsync(s => s.ReferralId == referralId.ToUpper());
-            }
-
-            return user;
-        }
-
         public async Task<IdentityUser> GetWeb3AccountAsync(string address)
         {
             var user = await microDbContext.Set<IdentityUser>()
                 .Include(s => s.IdentityUserMetaData)
-                .Include(s => s.ExternalAccount)
                 .FirstOrDefaultAsync(s => s.NormalizedUserName == address.ToUpper());
 
             return user;

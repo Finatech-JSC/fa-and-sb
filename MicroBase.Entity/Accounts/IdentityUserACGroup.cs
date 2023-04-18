@@ -2,8 +2,8 @@
 
 namespace MicroBase.Entity.Accounts
 {
-    [Table("IdentityUser_AC_Groups")]
-    public class IdentityUserACGroup : BaseEntity<Guid>
+    [Table("Privileges_UserRoleMaps")]
+    public class PrivilegesUserRoleMap : BaseEntity<Guid>
     {
         public Guid IdentityUserId { get; set; }
 
@@ -15,9 +15,9 @@ namespace MicroBase.Entity.Accounts
         public virtual IdentityUser IdentityUser { get; set; }
 
         [ForeignKey("RoleGroupId")]
-        public virtual IdentityUserRoleGroup IdentityUserRoleGroup { get; set; }
+        public virtual PrivilegesGroup PrivilegesGroup { get; set; }
 
         [ForeignKey("RoleId")]
-        public virtual IdentityUserRole IdentityUserRole { get; set; }
+        public virtual PrivilegesRole PrivilegesRole { get; set; }
     }
 }

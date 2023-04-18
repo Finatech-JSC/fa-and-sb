@@ -13,7 +13,11 @@ namespace MicroBase.Service.Foundations
 
         Task<IEnumerable<TResponse>> GetManyRecordByIdsAsync(IReadOnlyList<TKey> ids);
 
-        Task<TPaging<TResponse>> FindAsync(List<SearchTermModel> searchTerms, int pageIndex = 1, int pageSize = 20);
+        Task<TPaging<TResponse>> FindAsync(List<SearchTermModel> searchTerms,
+            string? fieldOrderBy,
+            bool isDescending,
+            int pageIndex = 1,
+            int pageSize = 20);
 
         Task<BaseResponse<TKey>> AddNewRecordAsync(TEntityDto entityDto);
         

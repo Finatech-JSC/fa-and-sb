@@ -17,7 +17,7 @@ namespace MicroBase.BaseApi.Apis
     /// <typeparam name="TResponse"></typeparam>
     /// <typeparam name="TDbContext"></typeparam>
     [ApiController]
-    public abstract class CrudBaseApiController<TEntity, TKey, TEntityDto, TResponse> 
+    public abstract class CrudBaseApiController<TEntity, TKey, TEntityDto, TResponse>
         : BaseTrackingCrudApiController<TEntity, TKey, TEntityDto>
         where TEntity : class, IBaseEntity<TKey>
         where TEntityDto : BaseModel
@@ -82,13 +82,13 @@ namespace MicroBase.BaseApi.Apis
         [HttpGet("find")]
         public virtual async Task<TPaging<TResponse>> Find([FromQuery] List<SearchTermModel> searchTerms,
             string? fieldOrderBy,
-            string? orderDirection,
+            bool isDescending,
             int pageIndex = 1,
             int pageSize = 20)
         {
             try
             {
-                var records = await crudAppService.FindAsync(searchTerms, pageIndex, pageSize);
+                var records = await crudAppService.FindAsync(searchTerms, fieldOrderBy, isDescending, pageIndex, pageSize);
                 return records;
             }
             catch (Exception)

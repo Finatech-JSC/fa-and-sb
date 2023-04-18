@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MicroBase.Entity.Accounts
 {
-    [Table("IdentityUser_AC_RoleGroups")]
-    public class IdentityUserRoleGroup : BaseEntity<Guid>
+    [Table("Privileges_Groups")]
+    public class PrivilegesGroup : BaseEntity<Guid>
     {
-        [Required]
+        [Required, MaxLength(128)]
         public string Name { get; set; }
 
         [Required]
@@ -18,8 +18,8 @@ namespace MicroBase.Entity.Accounts
         [Required]
         public bool Enabled { get; set; } = false;
 
-        public virtual ICollection<IdentityUserRole> IdentityUserRoles { get; set; }
+        public virtual ICollection<PrivilegesRole> PrivilegesRoles { get; set; }
 
-        public virtual ICollection<IdentityUserRoleGroupMap> IdentityUserRoleGroupMaps { get; set; }
+        public virtual ICollection<PrivilegesRoleGroupMap> PrivilegesRoleGroupMaps { get; set; }
     }
 }

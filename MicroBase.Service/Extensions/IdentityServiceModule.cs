@@ -13,7 +13,7 @@ namespace MicroBase.Service.Extensions
     {
         public static void ModuleRegister(this IServiceCollection services, IConfiguration Configuration)
         {
-            services.AddIdentity<IdentityUser, IdentityUserRole>(options =>
+            services.AddIdentity<IdentityUser, PrivilegesRole>(options =>
             {
                 // Password settings
                 options.Password.RequireDigit = false;

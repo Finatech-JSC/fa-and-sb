@@ -38,14 +38,4 @@ namespace MicroBase.Share.Models.Accounts
 
         public OtpResponse OtpResponse { get; set; }
     }
-
-    public class AccountNotificationSettingModel
-    {
-        [MaxLength(50)]
-        public string Language { get; set; }
-
-        public bool AllowAppNotification { get; set; }
-
-        public bool AllowEmailNotification { get; set; }
-    }
 }

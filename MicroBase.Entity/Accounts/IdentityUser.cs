@@ -19,25 +19,18 @@ namespace MicroBase.Entity.Accounts
         [Required, MaxLength(255)]
         public override string NormalizedEmail { get; set; }
 
-        [MaxLength(255)]
-        public string UserNameKana { get; set; }
-
-        [Required]
+        [Required, MaxLength(50)]
         public string AccountType { get; set; }
 
         [MaxLength(255)]
         public string FullName { get; set; }
 
-        [MaxLength(50)]
-        public string ReferralId { get; set; }
-
-        public Guid? ReferralAccountId { get; set; }
-
         [MaxLength(128)]
         public virtual string LastLoginIpAddress { get; set; }
 
         public DateTime? LastLoginTime { get; set; }
-
+        
+        [MaxLength(50)]
         public string Via { get; set; }
 
         public bool IsDelete { get; set; }
@@ -64,12 +57,7 @@ namespace MicroBase.Entity.Accounts
 
         public virtual IdentityUserMetaData IdentityUserMetaData { get; set; }
 
-        public virtual ExternalAccount ExternalAccount { get; set; }
-
-        [ForeignKey("ReferralAccountId")]
-        public virtual IdentityUser ReferralAccount { get; set; }
-
-        public virtual ICollection<IdentityUserACGroup> IdentityUserACGroups { get; set; }
+        public virtual ICollection<PrivilegesUserRoleMap> IdentityUserACGroups { get; set; }
 
         public virtual ICollection<IdentityUserTwoFA> IdentityUserTwoFAs { get; set; }
 

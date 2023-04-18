@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -35,9 +34,17 @@ namespace MicroBase.Share.Linqkit
             return predicate;
         }
 
-        public static Expression<Func<T, bool>> CombineFromDynamicTerm<T>(Expression<Func<T, bool>> predicate, IEnumerable<SearchTermModel> searchTerms)
+        /// <summary>
+        /// Build dynamic expression from SearchTermModel
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="predicate"></param>
+        /// <param name="searchTerms"></param>
+        /// <returns></returns>
+        public static Expression<Func<T, bool>> CombineFromDynamicTerm<T>(Expression<Func<T, bool>> predicate,
+            IEnumerable<SearchTermModel> searchTerms)
         {
-            var product = (T)Activator.CreateInstance(typeof(T));
+            var objectInstance = (T)Activator.CreateInstance(typeof(T));
             var targetObject = Expression.Parameter(typeof(T));
 
             foreach (var searchTerm in searchTerms)
@@ -45,7 +52,7 @@ namespace MicroBase.Share.Linqkit
                 // Column name in the table
                 var memberExpression = Expression.PropertyOrField(targetObject, searchTerm.FieldName);
 
-                var field = product.GetType().GetProperty(searchTerm.FieldName);
+                var field = objectInstance.GetType().GetProperty(searchTerm.FieldName);
                 if (field == null)
                 {
                     continue;

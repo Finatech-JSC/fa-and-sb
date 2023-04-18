@@ -18,8 +18,6 @@ namespace MicroBase.Service.Localtions
             int pageIndex,
             int pageSize);
 
-        Task<List<ProvinceResponse>> GetProvincesByCountryCodeAsync(string countryCode);
-
         Task<ProvinceResponse> GetProvinceByIdAsync(Guid provinceId);
 
         Task<IEnumerable<DistrictResponse>> GetDistrictsByProvinceIdAsync(Guid provinceId);
@@ -65,7 +63,7 @@ namespace MicroBase.Service.Localtions
                     .Where(predicate)
                     .Skip((pageIndex - 1) * pageSize)
                     .Take(pageSize)
-                    .OrderBy(s => s.Order)
+                    .OrderBy(s => s.FullName)
                     .ToListAsync();
 
                 var response = records.Select(s => new ProvinceResponse
@@ -75,7 +73,6 @@ namespace MicroBase.Service.Localtions
                     ShortName = s.ShortName,
                     CreatedDate = s.CreatedDate,
                     ModifiedDate = s.ModifiedDate,
-                    CountryCode = s.CountryCode,
                     Enabled = s.Enabled
                 });
 
@@ -94,37 +91,6 @@ namespace MicroBase.Service.Localtions
                     Source = new List<ProvinceResponse>(),
                     TotalRecords = 0
                 };
-            }
-        }
-
-        public async Task<List<ProvinceResponse>> GetProvincesByCountryCodeAsync(string countryCode)
-        {
-            try
-            {
-                var provinces = new List<ProvinceResponse>();
-                var res = await Repository.FindAsync(s => !s.IsDelete && s.Enabled && s.CountryCode == countryCode);
-                if (res == null || !res.Any())
-                {
-                    return new List<ProvinceResponse>();
-                }
-
-                provinces = res.Select(s => new ProvinceResponse
-                {
-                    Id = s.Id,
-                    FullName = s.FullName,
-                    ShortName = s.ShortName,
-                    CreatedDate = s.CreatedDate,
-                    ModifiedDate = s.ModifiedDate,
-                    CountryCode = s.CountryCode,
-                    Enabled = s.Enabled
-                }).ToList();
-
-                return provinces;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"GetProvincesByCountryCodeAsync Exception: {ex}");
-                throw;
             }
         }
 

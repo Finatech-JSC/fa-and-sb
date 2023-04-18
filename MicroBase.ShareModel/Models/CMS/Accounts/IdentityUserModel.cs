@@ -8,9 +8,6 @@ namespace MicroBase.Share.Models.CMS.Accounts
         [RoboText(LabelText = "Full name", Name = "UserName", MaxLength = 255, IsRequired = true, Cols = 12, Order = 1)]
         public string UserName { get; set; }
 
-        [RoboText(LabelText = "Full name (Kana)", Name = "UserNameKana", MaxLength = 255, IsRequired = true, Cols = 12, Order = 2)]
-        public string UserNameKana { get; set; }
-
         [RoboText(IsHidden = true, Type = RoboTextType.Email, LabelText = "User Email Address", Name = "Email", MaxLength = 255, IsRequired = true, Cols = 12, Order = 3)]
         public string Email { get; set; }
 

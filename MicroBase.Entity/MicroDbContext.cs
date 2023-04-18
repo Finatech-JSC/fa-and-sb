@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace MicroBase.Entity
 {
-    public class MicroDbContext : IdentityDbContext<IdentityUser, IdentityUserRole, Guid>
+    public class MicroDbContext : IdentityDbContext<IdentityUser, PrivilegesRole, Guid>
     {
         public MicroDbContext(DbContextOptions<MicroDbContext> options)
             : base(options)
@@ -21,19 +21,21 @@ namespace MicroBase.Entity
 
         public DbSet<IdentityUserMetaData> IdentityUserMetaDatas { get; set; }
 
-        //public DbSet<ExternalAccount> ExternalAccounts { get; set; }
-
         public DbSet<IdentityUserActivity> IdentityUserActivities { get; set; }
 
         public DbSet<IdentityUserTwoFA> IdentityUserTwoFAs { get; set; }
 
-        public DbSet<IdentityUserACGroup> IdentityUserACGroups { get; set; }
+        #region Roles
+        
+        public DbSet<PrivilegesRole> PrivilegesRoles { get; set; }
 
-        public DbSet<IdentityUserRole> IdentityUserRoles { get; set; }
+        public DbSet<PrivilegesGroup> PrivilegesGroups { get; set; }
 
-        public DbSet<IdentityUserRoleGroup> IdentityUserRoleGroups { get; set; }
+        public DbSet<PrivilegesUserRoleMap> PrivilegesUserRoleMaps { get; set; }
 
-        public DbSet<IdentityUserRoleGroupMap> IdentityUserRoleGroupMaps { get; set; }
+        public DbSet<PrivilegesRoleGroupMap> PrivilegesRoleGroupMaps { get; set; }
+
+        #endregion
 
         public DbSet<SystemMenu> SystemMenus { get; set; }
 
@@ -85,7 +87,7 @@ namespace MicroBase.Entity
                 entity.ToTable(name: "IdentityUsers");
             });
 
-            modelBuilder.Entity<IdentityUserRole>(entity =>
+            modelBuilder.Entity<PrivilegesRole>(entity =>
             {
                 entity.ToTable(name: "IdentityUser_AC_Roles");
             });

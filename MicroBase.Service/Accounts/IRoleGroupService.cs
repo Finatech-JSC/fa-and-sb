@@ -12,7 +12,7 @@ using System.Transactions;
 
 namespace MicroBase.Service.Accounts
 {
-    public interface IRoleGroupService : IGenericService<IdentityUserRoleGroup, Guid>
+    public interface IRoleGroupService : IGenericService<PrivilegesGroup, Guid>
     {
         Task<TPaging<RoleGroupRoboModel>> GetAvailableAsync(int pageIndex, int pageSize);
 
@@ -29,15 +29,15 @@ namespace MicroBase.Service.Accounts
             IEnumerable<Guid> permissionIds);
     }
 
-    public class RoleGroupService : GenericService<IdentityUserRoleGroup, Guid>, IRoleGroupService
+    public class RoleGroupService : GenericService<PrivilegesGroup, Guid>, IRoleGroupService
     {
         private readonly MicroDbContext microDbContext;
-        private readonly IRepository<IdentityUserRoleGroupMap, Guid> rolePermissionRepo;
+        private readonly IRepository<PrivilegesRoleGroupMap, Guid> rolePermissionRepo;
         private readonly IMapper mapper;
 
-        public RoleGroupService(IRepository<IdentityUserRoleGroup, Guid> repository,
+        public RoleGroupService(IRepository<PrivilegesGroup, Guid> repository,
             MicroDbContext microDbContext,
-            IRepository<IdentityUserRoleGroupMap, Guid> rolePermissionRepo,
+            IRepository<PrivilegesRoleGroupMap, Guid> rolePermissionRepo,
             IMapper mapper)
             : base(repository)
         {
@@ -46,14 +46,14 @@ namespace MicroBase.Service.Accounts
             this.mapper = mapper;
         }
 
-        protected override void ApplyDefaultSort(FindOptions<IdentityUserRoleGroup> findOptions)
+        protected override void ApplyDefaultSort(FindOptions<PrivilegesGroup> findOptions)
         {
             findOptions.SortDescending(s => s.Name);
         }
 
         public async Task<TPaging<RoleGroupRoboModel>> GetAvailableAsync(int pageIndex, int pageSize)
         {
-            var source = await Repository.FindAsync(s => !s.IsDelete, findOptions: new FindOptions<IdentityUserRoleGroup>
+            var source = await Repository.FindAsync(s => !s.IsDelete, findOptions: new FindOptions<PrivilegesGroup>
             {
                 Skip = (pageIndex - 1) * pageSize,
                 Limit = pageSize
@@ -78,17 +78,17 @@ namespace MicroBase.Service.Accounts
 
         public async Task<IEnumerable<PermissionResponse>> GetPermissionByGroupIdAsync(Guid groupId)
         {
-            var roleGroup = await microDbContext.Set<IdentityUserRoleGroup>()
-                .Include(s => s.IdentityUserRoleGroupMaps)
-                .ThenInclude(s => s.IdentityUserRole)
+            var roleGroup = await microDbContext.Set<PrivilegesGroup>()
+                .Include(s => s.PrivilegesRoleGroupMaps)
+                .ThenInclude(s => s.PrivilegesRole)
                 .Where(s => s.Id == groupId
                     && !s.IsDelete)
                 .FirstOrDefaultAsync();
 
             var permissions = new List<PermissionResponse>();
-            foreach (var item in roleGroup.IdentityUserRoleGroupMaps.Where(s => !s.IsDelete))
+            foreach (var item in roleGroup.PrivilegesRoleGroupMaps.Where(s => !s.IsDelete))
             {
-                var p = item.IdentityUserRole;
+                var p = item.PrivilegesRole;
                 permissions.Add(new PermissionResponse
                 {
                     Id = p.Id,
@@ -109,7 +109,7 @@ namespace MicroBase.Service.Accounts
             RoleGroupRequest model,
             Guid? createById)
         {
-            var entity = new IdentityUserRoleGroup();
+            var entity = new PrivilegesGroup();
             if (groupId.HasValue)
             {
                 entity = await GetByIdAsync(groupId.Value);
@@ -125,7 +125,7 @@ namespace MicroBase.Service.Accounts
             }
             else
             {
-                entity = new IdentityUserRoleGroup
+                entity = new PrivilegesGroup
                 {
                     Id = Guid.NewGuid(),
                     Name = model.Name,
@@ -159,15 +159,15 @@ namespace MicroBase.Service.Accounts
             Guid? createById,
             IEnumerable<Guid> permissionIds)
         {
-            var roleGroupPermissions = await rolePermissionRepo.FindAsync(s => s.RoleGroupId == groupId && !s.IsDelete);
+            var roleGroupPermissions = await rolePermissionRepo.FindAsync(s => s.GroupId == groupId && !s.IsDelete);
 
-            var newRolePermissionEntities = new List<IdentityUserRoleGroupMap>();
+            var newRolePermissionEntities = new List<PrivilegesRoleGroupMap>();
             var permissions = permissionIds.Where(s => !roleGroupPermissions.Select(p => p.RoleId).Contains(s));
             foreach (var id in permissions)
             {
-                newRolePermissionEntities.Add(new IdentityUserRoleGroupMap
+                newRolePermissionEntities.Add(new PrivilegesRoleGroupMap
                 {
-                    RoleGroupId = groupId,
+                    GroupId = groupId,
                     RoleId = id,
                     CreatedBy = createById,
                     CreatedDate = DateTime.UtcNow
@@ -184,12 +184,12 @@ namespace MicroBase.Service.Accounts
             {
                 if (newRolePermissionEntities.Any())
                 {
-                    microDbContext.Set<IdentityUserRoleGroupMap>().AddRange(newRolePermissionEntities);
+                    microDbContext.Set<PrivilegesRoleGroupMap>().AddRange(newRolePermissionEntities);
                 }
 
                 if (deleteRolePermissionEntities.Any())
                 {
-                    microDbContext.Set<IdentityUserRoleGroupMap>().UpdateRange(deleteRolePermissionEntities);
+                    microDbContext.Set<PrivilegesRoleGroupMap>().UpdateRange(deleteRolePermissionEntities);
                 }
 
                 microDbContext.SaveChanges();

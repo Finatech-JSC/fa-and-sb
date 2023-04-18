@@ -4,6 +4,7 @@ using MicroBase.NoDependencyService;
 using MicroBase.Service.Foundations;
 using MicroBase.Share.Constants;
 using MicroBase.Share.Extensions;
+using MicroBase.Share.Linqkit;
 using MicroBase.Share.Models;
 using MicroBase.Share.Models.DataGirds;
 using Microsoft.AspNetCore.Http;
@@ -117,6 +118,24 @@ namespace MicroBase.BaseApi.Apis
                     Message = string.Format(CommonMessage.IMPORT_FILE_SUCESSFULLY_WITH_COUNT, $"{insertRes.Data.Count()}/{dataRecordRes.Data.Count()}"),
                     MessageCode = nameof(CommonMessage.IMPORT_FILE_SUCESSFULLY_WITH_COUNT)
                 };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpGet("export-to-csv-file")]
+        public virtual async Task<TPaging<TResponse>> ExportToCsv([FromQuery] List<SearchTermModel> searchTerms,
+            string? fieldOrderBy,
+            bool isDescending,
+            int pageIndex = 1,
+            int pageSize = 1000000)
+        {
+            try
+            {
+                var records = await crudAppService.FindAsync(searchTerms, fieldOrderBy, isDescending, pageIndex, pageSize);
+                return records;
             }
             catch (Exception)
             {

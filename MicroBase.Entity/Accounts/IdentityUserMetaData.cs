@@ -15,9 +15,6 @@ namespace MicroBase.Entity.Accounts
         [MaxLength(1000)]
         public string Address { get; set; }
 
-        [MaxLength(10)]
-        public string CountryCode { get; set; }
-
         public Guid? ProvinceId { get; set; }
 
         public Guid? DistrictId { get; set; }
@@ -27,27 +24,8 @@ namespace MicroBase.Entity.Accounts
 
         public sbyte? Gender { get; set; }
 
-        public int ReferralCount { get; set; }
-
-        public int ReferralWeekCount { get; set; }
-
-        public int ReferralMonthCount { get; set; }
-
-        [MaxLength(10)]
-        public string DefaultLanguage { get; set; }
-
-        public bool AllowAppNotification { get; set; }
-
-        public bool AllowEmailNotification { get; set; }
-
         [MaxLength(50)]
         public string PostCode { get; set; }
-
-        [MaxLength(512)]
-        public string WalletAddress { get; set; }
-
-        [MaxLength(512)]
-        public string NormalizedWalletAddress { get; set; }
 
         [ForeignKey("IdentityUserId")]
         public virtual IdentityUser IdentityUser { get; set; }

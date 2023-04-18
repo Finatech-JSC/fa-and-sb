@@ -9,7 +9,7 @@ namespace MicroBase.Entity.Localtions
         [Required]
         public Guid ProvinceId { get; set; }
 
-        [Required, MaxLength(512)]
+        [Required, MaxLength(255)]
         public string FullName { get; set; }
 
         [MaxLength(255)]

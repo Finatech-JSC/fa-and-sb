@@ -6,7 +6,7 @@ namespace MicroBase.Share.Models
     {
         public IEnumerable<T> Source { get; set; }
 
-        public int TotalRecords { get; set; }
+        public long TotalRecords { get; set; }
 
         public int Pages { get; set; }
     }

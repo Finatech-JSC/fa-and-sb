@@ -5,19 +5,19 @@ using MicroBase.Share.DataAccess;
 
 namespace MicroBase.Service.Accounts
 {
-    public interface IRolePermissionService : IGenericService<IdentityUserRoleGroupMap, Guid>
+    public interface IRolePermissionService : IGenericService<PrivilegesRoleGroupMap, Guid>
     {
     }
 
-    public class RolePermissionService : GenericService<IdentityUserRoleGroupMap, Guid>, IRolePermissionService
+    public class RolePermissionService : GenericService<PrivilegesRoleGroupMap, Guid>, IRolePermissionService
     {
-        public RolePermissionService(IRepository<IdentityUserRoleGroupMap, Guid> repository) : base(repository)
+        public RolePermissionService(IRepository<PrivilegesRoleGroupMap, Guid> repository) : base(repository)
         {
         }
 
-        protected override void ApplyDefaultSort(FindOptions<IdentityUserRoleGroupMap> findOptions)
+        protected override void ApplyDefaultSort(FindOptions<PrivilegesRoleGroupMap> findOptions)
         {
-            findOptions.SortDescending(s => s.RoleGroupId);
+            findOptions.SortDescending(s => s.GroupId);
         }
     }
 }

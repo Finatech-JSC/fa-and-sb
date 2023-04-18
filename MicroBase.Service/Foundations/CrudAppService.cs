@@ -6,6 +6,7 @@ using MicroBase.Share.DataAccess;
 using MicroBase.Share.Extensions;
 using MicroBase.Share.Linqkit;
 using MicroBase.Share.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace MicroBase.Service.Foundations
 {
@@ -23,11 +24,14 @@ namespace MicroBase.Service.Foundations
         where TResponse : class
     {
         private readonly IMapper mapper;
+        private readonly MicroDbContext microDbContext;
 
         public CrudAppService(IRepository<TEntity, TKey> repository,
-            IMapper mapper) : base(repository)
+            IMapper mapper,
+            MicroDbContext microDbContext) : base(repository)
         {
             this.mapper = mapper;
+            this.microDbContext = microDbContext;
         }
 
         protected override void ApplyDefaultSort(FindOptions<TEntity> findOptions)
@@ -75,7 +79,18 @@ namespace MicroBase.Service.Foundations
             }
         }
 
+        /// <summary>
+        /// Lấy danh sách bản ghi theo điều kiện tìm kiếm, hỗ trợ phân trang và sắp xếp
+        /// </summary>
+        /// <param name="searchTerms"></param>
+        /// <param name="fieldOrderBy"></param>
+        /// <param name="descending"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
         public virtual async Task<TPaging<TResponse>> FindAsync(List<SearchTermModel> searchTerms,
+            string? fieldOrderBy,
+            bool isDescending,
             int pageIndex = 1,
             int pageSize = 20)
         {
@@ -84,13 +99,25 @@ namespace MicroBase.Service.Foundations
                 var predicate = PredicateBuilder.Create<TEntity>(s => s.IsDelete == false);
                 predicate = PredicateBuilder.CombineFromDynamicTerm(predicate, searchTerms);
 
-                var records = await GetRecordsAsync(predicate);
+                var totalRecords = await CountAsync(predicate);
+                var query = microDbContext.Set<TEntity>()
+                    .Where(predicate);
+
+                if (!string.IsNullOrWhiteSpace(fieldOrderBy))
+                {
+                    query = DynamicLinqExtention.OrderByDynamic(query, fieldOrderBy, isDescending);
+                }
+
+                var records = query.Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
                 var toTResponses = mapper.Map<List<TResponse>>(records);
 
                 return new TPaging<TResponse>
                 {
                     Pages = pageIndex,
-                    TotalRecords = 100,
+                    TotalRecords = totalRecords,
                     Source = toTResponses
                 };
             }

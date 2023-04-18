@@ -107,7 +107,7 @@ namespace MicroBase.Service.Accounts
             var query = await microDbContext.Set<IdentityUser>()
                 .Include(s => s.IdentityUserMetaData)
                 .Include(s => s.IdentityUserACGroups)
-                .ThenInclude(s => s.IdentityUserRoleGroup)
+                .ThenInclude(s => s.PrivilegesGroup)
                 .Where(predicate)
                 .OrderByDescending(s => s.CreatedDate)
                 .Skip((pageIndex - 1) * pageSize)
@@ -130,7 +130,7 @@ namespace MicroBase.Service.Accounts
                         account.RoleGroups.Add(new NameValueModel<Guid>
                         {
                             Value = per.RoleGroupId.Value,
-                            Name = per.IdentityUserRoleGroup.Name
+                            Name = per.PrivilegesGroup.Name
                         });
                     }
                 }
@@ -162,11 +162,8 @@ namespace MicroBase.Service.Accounts
             return new AccountProfileModel
             {
                 AccountType = identity.AccountType,
-                AllowAppNotification = identity.IdentityUserMetaData != null ? identity.IdentityUserMetaData.AllowAppNotification : false,
-                AllowEmailNotification = identity.IdentityUserMetaData != null ? identity.IdentityUserMetaData.AllowEmailNotification : false,
                 Avatar = identity.IdentityUserMetaData?.Avatar,
                 Email = identity.Email,
-                DefaultLanguage = identity.IdentityUserMetaData?.DefaultLanguage,
                 DateOfBirth = identity.IdentityUserMetaData?.DateOfBirth,
                 EmailConfirmDate = identity.EmailConfirmDate,
                 EmailConfirmed = identity.EmailConfirmed,
@@ -199,9 +196,7 @@ namespace MicroBase.Service.Accounts
                 {
                     predicate = predicate.And(s => s.NormalizedUserName.Contains(searchTerm.CustomTrim().ToUpper())
                         || s.NormalizedEmail.Contains(searchTerm.CustomTrim().ToUpper())
-                        || s.PhoneNumber.Contains(searchTerm.CustomTrim())
-                        || s.IdentityUserMetaData.NormalizedWalletAddress.Contains(searchTerm.CustomTrim().ToUpper())
-                        || s.IdentityUserMetaData.WalletAddress.Contains(searchTerm.CustomTrim()));
+                        || s.PhoneNumber.Contains(searchTerm.CustomTrim()));
                 }
 
                 if (fromDate.HasValue)
@@ -241,7 +236,6 @@ namespace MicroBase.Service.Accounts
                         PostCode = user.IdentityUserMetaData?.PostCode,
                         Address = user.IdentityUserMetaData?.Address,
                         UserName = user.UserName,
-                        UserNameKana = user.UserNameKana,
                         ProvinceId = user.IdentityUserMetaData?.ProvinceId,
                         ProvinceName = user.IdentityUserMetaData?.Province?.FullName,
                     });
@@ -328,31 +322,14 @@ namespace MicroBase.Service.Accounts
 
                 if (isSystemLocked && !string.IsNullOrWhiteSpace(email))
                 {
-                    var cultureCode = Constants.CultureCode.UnitedStates;
-                    if (account.IdentityUserMetaData != null
-                        && !string.IsNullOrEmpty(account.IdentityUserMetaData.DefaultLanguage)
-                        && account.IdentityUserMetaData.DefaultLanguage.ToUpper() == Constants.CultureCode.UnitedStates)
-                    {
-                        cultureCode = Constants.CultureCode.UnitedStates;
-                    }
-
                     string emailKeyCode = Constants.EmailTemplates.ACCOUNT_HAS_BEEN_LOCKED;
+
                     var token = new Dictionary<string, string>();
                     if (lockEndDate != null)
                     {
                         emailKeyCode = Constants.EmailTemplates.ACCOUNT_HAS_BEEN_LOCKED;
                         token.Add(Constants.EmailTemplates.EmailTokens.LOCK_DATE, lockEndDate.Value.ToString());
                     }
-
-                    //var message = new EmailQueueModel
-                    //{
-                    //    CultureCode = cultureCode,
-                    //    EmailTemplate = emailKeyCode,
-                    //    EmailTokens = token,
-                    //    ReceivingAddress = account.Email
-                    //};
-
-                    //await messageBusService.SendAsync(CampaignConstants.Queues.EmailMessage, message);
                 }
 
                 return res;
@@ -642,14 +619,6 @@ namespace MicroBase.Service.Accounts
                     microDbContext.Set<IdentityUser>().AddRange(user);
                     lockList.Add(user);
 
-                    var cultureCode = Constants.CultureCode.UnitedStates;
-                    if (user.IdentityUserMetaData != null
-                        && !string.IsNullOrEmpty(user.IdentityUserMetaData.DefaultLanguage)
-                        && user.IdentityUserMetaData.DefaultLanguage.ToUpper() == Constants.CultureCode.UnitedStates)
-                    {
-                        cultureCode = Constants.CultureCode.UnitedStates;
-                    }
-
                     var token = new Dictionary<string, string>();
                     if (!item.IsSystemLocked)
                     {
@@ -660,27 +629,11 @@ namespace MicroBase.Service.Accounts
                     {
                         emailKeyCode = Constants.EmailTemplates.ACCOUNT_HAS_BEEN_LOCKED_FOREVER;
                     }
-
-                    //var message = new EmailQueueModel
-                    //{
-                    //    AccountId = user.Id,
-                    //    CultureCode = cultureCode,
-                    //    EmailTemplate = emailKeyCode,
-                    //    EmailTokens = token,
-                    //    ReceivingAddress = item.Email
-                    //};
-
-                    //emailList.Add(message);
                 }
 
                 if (lockList.Count() > 0)
                 {
                     await identityUserRepo.UpdateManyAsync(lockList);
-
-                    //foreach (var message in emailList)
-                    //{
-                    //    await messageBusService.SendAsync(CampaignConstants.Queues.EmailMessage, message);
-                    //}
                 }
 
                 return new BaseCmsResponse<object>
@@ -747,7 +700,6 @@ namespace MicroBase.Service.Accounts
             entityByEmail.IsDelete = false;
             entityByEmail.UserName = userCmsModel.UserName;
             entityByEmail.NormalizedUserName = userCmsModel.UserName.ToUpperInvariant();
-            entityByEmail.UserNameKana = userCmsModel.UserNameKana;
             entityByEmail.PhoneNumber = userCmsModel.PhoneNumber;
             entityByEmail.CreatedDate = DateTime.UtcNow;
 
@@ -805,7 +757,6 @@ namespace MicroBase.Service.Accounts
                 Id = id,
                 UserName = userCmsModel.UserName,
                 NormalizedUserName = userCmsModel.UserName.ToUpperInvariant(),
-                UserNameKana = userCmsModel.UserNameKana,
                 Email = userCmsModel.Email,
                 NormalizedEmail = userCmsModel.Email.ToUpperInvariant(),
                 EmailConfirmed = false,
@@ -862,7 +813,6 @@ namespace MicroBase.Service.Accounts
             var accountEntity = await Repository.GetByIdAsync(userCmsModel.Id.Value);
             accountEntity.UserName = userCmsModel.UserName.ToLowerInvariant();
             accountEntity.NormalizedUserName = userCmsModel.UserName.ToUpperInvariant();
-            accountEntity.UserNameKana = userCmsModel.UserNameKana;
             accountEntity.Email = userCmsModel.Email;
             accountEntity.NormalizedEmail = userCmsModel.Email.ToUpperInvariant();
             accountEntity.PhoneNumber = userCmsModel.PhoneNumber;

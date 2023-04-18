@@ -6,18 +6,18 @@ using MicroBase.Share.Models.CMS.Permissions;
 
 namespace MicroBase.Service.Accounts
 {
-    public interface IPermissionService : IGenericService<IdentityUserRole, Guid>
+    public interface IPermissionService : IGenericService<PrivilegesRole, Guid>
     {
         Task<IEnumerable<PermissionGroupResponse>> GetSystemPermissionsAsync();
     }
 
-    public class PermissionService : GenericService<IdentityUserRole, Guid>, IPermissionService
+    public class PermissionService : GenericService<PrivilegesRole, Guid>, IPermissionService
     {
-        public PermissionService(IRepository<IdentityUserRole, Guid> repository) : base(repository)
+        public PermissionService(IRepository<PrivilegesRole, Guid> repository) : base(repository)
         {
         }
 
-        protected override void ApplyDefaultSort(FindOptions<IdentityUserRole> findOptions)
+        protected override void ApplyDefaultSort(FindOptions<PrivilegesRole> findOptions)
         {
             findOptions.SortDescending(s => s.Name);
         }

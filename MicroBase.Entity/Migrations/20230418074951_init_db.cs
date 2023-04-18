@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace MicroBase.Entity.Migrations
 {
-    public partial class initdatabase : Migration
+    public partial class init_db : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -58,14 +58,11 @@ namespace MicroBase.Entity.Migrations
                     NormalizedUserName = table.Column<string>(type: "NVARCHAR2(256)", maxLength: 256, nullable: false),
                     Email = table.Column<string>(type: "NVARCHAR2(256)", maxLength: 256, nullable: false),
                     NormalizedEmail = table.Column<string>(type: "NVARCHAR2(256)", maxLength: 256, nullable: false),
-                    UserNameKana = table.Column<string>(type: "NVARCHAR2(255)", maxLength: 255, nullable: true),
-                    AccountType = table.Column<string>(type: "NVARCHAR2(2000)", nullable: false),
+                    AccountType = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false),
                     FullName = table.Column<string>(type: "NVARCHAR2(255)", maxLength: 255, nullable: true),
-                    ReferralId = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: true),
-                    ReferralAccountId = table.Column<Guid>(type: "RAW(16)", nullable: true),
                     LastLoginIpAddress = table.Column<string>(type: "NVARCHAR2(128)", maxLength: 128, nullable: true),
                     LastLoginTime = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: true),
-                    Via = table.Column<string>(type: "NVARCHAR2(2000)", nullable: true),
+                    Via = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: true),
                     IsDelete = table.Column<bool>(type: "NUMBER(1)", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "RAW(16)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
@@ -90,11 +87,6 @@ namespace MicroBase.Entity.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_IdentityUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_IdentityUsers_IdentityUsers_ReferralAccountId",
-                        column: x => x.ReferralAccountId,
-                        principalTable: "IdentityUsers",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -254,32 +246,6 @@ namespace MicroBase.Entity.Migrations
                         column: x => x.IdentityUserId,
                         principalTable: "IdentityUsers",
                         principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "IdentityUser_ExternalAccounts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "RAW(16)", nullable: false),
-                    ProviderName = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
-                    ExternalAccountId = table.Column<string>(type: "NVARCHAR2(255)", maxLength: 255, nullable: true),
-                    IdentityUserId = table.Column<Guid>(type: "RAW(16)", nullable: false),
-                    Platform = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false),
-                    IsDelete = table.Column<bool>(type: "NUMBER(1)", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "RAW(16)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
-                    ModifiedBy = table.Column<Guid>(type: "RAW(16)", nullable: true),
-                    ModifiedDate = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_IdentityUser_ExternalAccounts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_IdentityUser_ExternalAccounts_IdentityUsers_IdentityUserId",
-                        column: x => x.IdentityUserId,
-                        principalTable: "IdentityUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -601,12 +567,6 @@ namespace MicroBase.Entity.Migrations
                 column: "IdentityUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_IdentityUser_ExternalAccounts_IdentityUserId",
-                table: "IdentityUser_ExternalAccounts",
-                column: "IdentityUserId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_IdentityUser_MetaData_IdentityUserId",
                 table: "IdentityUser_MetaData",
                 column: "IdentityUserId",
@@ -643,11 +603,6 @@ namespace MicroBase.Entity.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_IdentityUsers_ReferralAccountId",
-                table: "IdentityUsers",
-                column: "ReferralAccountId");
-
-            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "IdentityUsers",
                 column: "NormalizedUserName",
@@ -678,9 +633,6 @@ namespace MicroBase.Entity.Migrations
 
             migrationBuilder.DropTable(
                 name: "IdentityUser_Activities");
-
-            migrationBuilder.DropTable(
-                name: "IdentityUser_ExternalAccounts");
 
             migrationBuilder.DropTable(
                 name: "IdentityUser_MetaData");

@@ -30,11 +30,11 @@ namespace MicroBase.Service.Accounts
     public class PermissionManageService : IPermissionManageService
     {
         private readonly MicroDbContext microDbContext;
-        private readonly IRepository<IdentityUserACGroup, Guid> identityUserPermissionRepo;
+        private readonly IRepository<PrivilegesUserRoleMap, Guid> identityUserPermissionRepo;
         private readonly IConfiguration configuration;
 
         public PermissionManageService(MicroDbContext microDbContext,
-            IRepository<IdentityUserACGroup, Guid> identityUserPermissionRepo,
+            IRepository<PrivilegesUserRoleMap, Guid> identityUserPermissionRepo,
             IConfiguration configuration)
         {
             this.microDbContext = microDbContext;
@@ -44,7 +44,7 @@ namespace MicroBase.Service.Accounts
 
         public void SyncPermissionsToDb(IEnumerable<AttrPermissionGroupModel> permissionsModel)
         {
-            var permissionEntities = microDbContext.Set<IdentityUserRole>()
+            var permissionEntities = microDbContext.Set<PrivilegesRole>()
                 .Where(s => true);
 
             var permissionCodes = new List<string>();
@@ -54,7 +54,7 @@ namespace MicroBase.Service.Accounts
             }
 
             // For new permissions
-            var newPermissionEntities = new List<IdentityUserRole>();
+            var newPermissionEntities = new List<PrivilegesRole>();
             var newPermissions = permissionCodes.Where(s => !permissionEntities.Select(p => p.Code).Contains(s));
             foreach (var code in newPermissions)
             {
@@ -63,7 +63,7 @@ namespace MicroBase.Service.Accounts
                     var per = model.PermissionInfos.FirstOrDefault(s => s.Code == code);
                     if (per != null)
                     {
-                        newPermissionEntities.Add(new IdentityUserRole
+                        newPermissionEntities.Add(new PrivilegesRole
                         {
                             Name = per.Name,
                             Code = per.Code,
@@ -116,12 +116,12 @@ namespace MicroBase.Service.Accounts
             {
                 if (newPermissionEntities.Any())
                 {
-                    microDbContext.Set<IdentityUserRole>().AddRange(newPermissionEntities);
+                    microDbContext.Set<PrivilegesRole>().AddRange(newPermissionEntities);
                 }
 
                 if (updatePermissionEntities.Any())
                 {
-                    microDbContext.Set<IdentityUserRole>().UpdateRange(updatePermissionEntities);
+                    microDbContext.Set<PrivilegesRole>().UpdateRange(updatePermissionEntities);
                 }
 
                 microDbContext.SaveChanges();
@@ -136,8 +136,8 @@ namespace MicroBase.Service.Accounts
         {
             try
             {
-                var newIdentityUserPermissionEntities = new List<IdentityUserACGroup>();
-                var updateIdentityUserPermissionEntities = new List<IdentityUserACGroup>();
+                var newIdentityUserPermissionEntities = new List<PrivilegesUserRoleMap>();
+                var updateIdentityUserPermissionEntities = new List<PrivilegesUserRoleMap>();
 
                 var accountPermissionsEntites = await identityUserPermissionRepo.FindAsync(s => s.IdentityUserId == accountId
                     && !s.IsDelete);
@@ -145,7 +145,7 @@ namespace MicroBase.Service.Accounts
                 // Add new RoleGroups
                 foreach (var groupId in roleGroupIds.Where(s => !accountPermissionsEntites.Select(p => p.RoleGroupId).Contains(s)))
                 {
-                    newIdentityUserPermissionEntities.Add(new IdentityUserACGroup
+                    newIdentityUserPermissionEntities.Add(new PrivilegesUserRoleMap
                     {
                         Id = Guid.NewGuid(),
                         IdentityUserId = accountId,
@@ -172,7 +172,7 @@ namespace MicroBase.Service.Accounts
                     // Add new Permissions
                     foreach (var permissionId in permissionIds.Where(s => !accountPermissionsEntites.Select(p => p.RoleId).Contains(s)))
                     {
-                        newIdentityUserPermissionEntities.Add(new IdentityUserACGroup
+                        newIdentityUserPermissionEntities.Add(new PrivilegesUserRoleMap
                         {
                             Id = Guid.NewGuid(),
                             IdentityUserId = accountId,
@@ -199,12 +199,12 @@ namespace MicroBase.Service.Accounts
                 {
                     if (newIdentityUserPermissionEntities.Any())
                     {
-                        microDbContext.Set<IdentityUserACGroup>().AddRange(newIdentityUserPermissionEntities);
+                        microDbContext.Set<PrivilegesUserRoleMap>().AddRange(newIdentityUserPermissionEntities);
                     }
 
                     if (updateIdentityUserPermissionEntities.Any())
                     {
-                        microDbContext.Set<IdentityUserACGroup>().UpdateRange(updateIdentityUserPermissionEntities);
+                        microDbContext.Set<PrivilegesUserRoleMap>().UpdateRange(updateIdentityUserPermissionEntities);
                     }
 
                     microDbContext.SaveChanges();
@@ -226,13 +226,13 @@ namespace MicroBase.Service.Accounts
         public async Task<IEnumerable<PermissionGroupResponse>> GetPermissionsByAccountIdAsync(Guid accountId,
             bool? fromDb = false)
         {
-            var query = await microDbContext.Set<IdentityUserACGroup>()
-                .Include(s => s.IdentityUserRoleGroup)
-                .ThenInclude(s => s.IdentityUserRoleGroupMaps)
-                .ThenInclude(s => s.IdentityUserRole)
+            var query = await microDbContext.Set<PrivilegesUserRoleMap>()
+                .Include(s => s.PrivilegesGroup)
+                .ThenInclude(s => s.PrivilegesRoleGroupMaps)
+                .ThenInclude(s => s.PrivilegesRole)
                 .Where(s => !s.IsDelete
-                    && !s.IdentityUserRoleGroup.IsDelete
-                    && s.IdentityUserRoleGroup.Enabled
+                    && !s.PrivilegesGroup.IsDelete
+                    && s.PrivilegesGroup.Enabled
                     && s.IdentityUserId == accountId)
                 .ToListAsync();
 
@@ -242,26 +242,26 @@ namespace MicroBase.Service.Accounts
                 var group = query.FirstOrDefault(s => s.RoleGroupId == gr.Key);
                 var permissionInfo = new PermissionGroupResponse
                 {
-                    Id = group.IdentityUserRoleGroup.Id,
-                    Name = group.IdentityUserRoleGroup.Name,
-                    AllowFullAccess = group.IdentityUserRoleGroup.AllowFullAccess,
+                    Id = group.PrivilegesGroup.Id,
+                    Name = group.PrivilegesGroup.Name,
+                    AllowFullAccess = group.PrivilegesGroup.AllowFullAccess,
                     PermissionInfos = new List<PermissionInfoResponse>()
                 };
 
                 foreach (var s in gr)
                 {
-                    if (s.IdentityUserRoleGroup != null)
+                    if (s.PrivilegesGroup != null)
                     {
-                        foreach (var r in s.IdentityUserRoleGroup.IdentityUserRoleGroupMaps.Where(s => !s.IsDelete))
+                        foreach (var r in s.PrivilegesGroup.PrivilegesRoleGroupMaps.Where(s => !s.IsDelete))
                         {
                             permissionInfo.PermissionInfos.Add(new PermissionInfoResponse
                             {
                                 Id = r.RoleId,
-                                Code = r.IdentityUserRole.Code,
-                                GroupCode = r.IdentityUserRole.GroupCode,
-                                HttpMethod = r.IdentityUserRole.HttpMethod,
-                                Name = r.IdentityUserRole.Name,
-                                Route = r.IdentityUserRole.Route
+                                Code = r.PrivilegesRole.Code,
+                                GroupCode = r.PrivilegesRole.GroupCode,
+                                HttpMethod = r.PrivilegesRole.HttpMethod,
+                                Name = r.PrivilegesRole.Name,
+                                Route = r.PrivilegesRole.Route
                             });
                         }
                     }
@@ -270,11 +270,11 @@ namespace MicroBase.Service.Accounts
                         permissionInfo.PermissionInfos.Add(new PermissionInfoResponse
                         {
                             Id = s.RoleId.Value,
-                            Code = s.IdentityUserRole?.Code,
-                            GroupCode = s.IdentityUserRole?.GroupCode,
-                            HttpMethod = s.IdentityUserRole?.HttpMethod,
-                            Name = s.IdentityUserRole?.Name,
-                            Route = s.IdentityUserRole?.Route
+                            Code = s.PrivilegesRole?.Code,
+                            GroupCode = s.PrivilegesRole?.GroupCode,
+                            HttpMethod = s.PrivilegesRole?.HttpMethod,
+                            Name = s.PrivilegesRole?.Name,
+                            Route = s.PrivilegesRole?.Route
                         });
                     }
                 }
@@ -324,17 +324,17 @@ namespace MicroBase.Service.Accounts
                 return new List<NameValueModel<Guid>>();
             }
 
-            var userRoles = await microDbContext.Set<IdentityUserRole>()
+            var userRoles = await microDbContext.Set<PrivilegesRole>()
                 .Where(s => !s.IsDelete && s.GroupCode == roleGroupCode.ToUpper())
                 .ToListAsync();
 
-            var query = await microDbContext.Set<IdentityUserACGroup>()
+            var query = await microDbContext.Set<PrivilegesUserRoleMap>()
                 .Include(s => s.IdentityUser)
-                .Include(s => s.IdentityUserRoleGroup)
+                .Include(s => s.PrivilegesGroup)
                 .Where(s => s.IdentityUser.IsDelete == false
-                    && s.IdentityUserRoleGroup.IsDelete == false
+                    && s.PrivilegesGroup.IsDelete == false
                     && s.IsDelete== false
-                    && (userRoles.Select(r => r.Id).Contains(s.RoleId.Value) || s.IdentityUserRoleGroup.AllowFullAccess))
+                    && (userRoles.Select(r => r.Id).Contains(s.RoleId.Value) || s.PrivilegesGroup.AllowFullAccess))
                 .ToListAsync();
 
             return query.DistinctBy(s => s.IdentityUserId).Select(s => new NameValueModel<Guid>

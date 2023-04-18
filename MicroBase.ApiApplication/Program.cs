@@ -17,6 +17,7 @@ using MicroBase.BaseMvc;
 using MicroBase.Share.Models;
 using Microsoft.AspNetCore.Mvc;
 using MicroBase.Share.Constants;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -116,7 +117,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseMiddleware<RequestLoggingMiddleware>();
+//app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseMiddleware<ErrorHandlerMiddleware>();
 
 app.UseEndpoints(endpoints =>
@@ -127,12 +128,12 @@ app.UseEndpoints(endpoints =>
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var services = scope.ServiceProvider;
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
 
-//    var context = services.GetRequiredService<MicroDbContext>();
-//    context.Database.Migrate();
-//}
+    var context = services.GetRequiredService<MicroDbContext>();
+    context.Database.Migrate();
+}
 
 app.Run();
