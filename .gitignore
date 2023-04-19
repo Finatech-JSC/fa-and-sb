@@ -43,3 +43,5 @@ MicroBase.Logging/obj/
 MicroBase.FileStorage/bin/
 WebApplication1/bin/
 WebApplication1/obj/
+MicroBase.DbMigrator/bin/
+MicroBase.DbMigrator/obj/

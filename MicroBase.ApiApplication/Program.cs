@@ -128,12 +128,4 @@ app.UseEndpoints(endpoints =>
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-
-    var context = services.GetRequiredService<MicroDbContext>();
-    context.Database.Migrate();
-}
-
 app.Run();
